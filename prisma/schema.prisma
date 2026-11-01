@@ -1,0 +1,302 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  AUCTIONEER
+  TEAM_OWNER
+  PLAYER
+  VIEWER
+}
+
+enum TournamentStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum PlayerPosition {
+  OUTSIDE_HITTER
+  OPPOSITE
+  SETTER
+  MIDDLE_BLOCKER
+  LIBERO
+  DEFENSIVE_SPECIALIST
+}
+
+enum PlayerStatus {
+  REGISTERED
+  APPROVED
+  ACTIVE
+  SOLD
+  UNSOLD
+  HOLD
+}
+
+enum AuctionStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum BidStatus {
+  ACTIVE
+  OUTBID
+  WINNING
+  INVALID
+}
+
+enum PurchaseStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum SquadDesignation {
+  STARTER
+  SUBSTITUTE
+}
+
+enum AuctionEventType {
+  AUCTION_STARTED
+  PLAYER_SELECTED
+  BID_PLACED
+  TIMER_UPDATED
+  PLAYER_SOLD
+  PLAYER_UNSOLD
+  AUCTION_PAUSED
+  AUCTION_RESUMED
+  BUDGET_UPDATED
+  AUCTION_COMPLETED
+}
+
+enum AuctionRoomStatus {
+  WAITING
+  LIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum RoomMembershipConnectionStatus {
+  ONLINE
+  OFFLINE
+  DISCONNECTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team Team? @relation("TeamOwnerRelation")
+  roomMemberships RoomMembership[]
+  createdRooms AuctionRoom[] @relation("CreatedRooms")
+  assignedAuctionRooms AuctionRoom[] @relation("AuctioneerRooms")
+
+  @@index([role])
+}
+
+model Tournament {
+  id                        String            @id @default(cuid())
+  name                      String            @unique
+  status                    TournamentStatus  @default(DRAFT)
+  numberOfTeams             Int               @default(4)
+  maxPlayersPerTeam         Int               @default(7)
+  playingPlayers            Int               @default(6)
+  substitutePlayers         Int               @default(1)
+  teamAuctionBudget         Int               @default(5000)
+  totalAuctionBudget        Int               @default(20000)
+  basePlayerPrice           Int               @default(100)
+  minimumBidIncrement      Int               @default(100)
+  initialAuctionCountdownSeconds Int            @default(20)
+  lateBidExtensionSeconds  Int               @default(10)
+  auctionType               String            @default("LIVE")
+  bannerUrl                 String?
+  bannerPublicId            String?
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  teams                     Team[]
+  players                   Player[]
+  auction                   Auction?
+  auctionRooms              AuctionRoom[]
+
+  @@index([status])
+}
+
+model Team {
+  id               String      @id @default(cuid())
+  tournamentId     String
+  name             String      @unique
+  shortName        String      @unique
+  logoUrl          String?
+  logoPublicId     String?
+  ownerId          String?     @unique
+  budget           Int         @default(5000)
+  remainingBudget  Int         @default(5000)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  tournament       Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  owner            User?       @relation("TeamOwnerRelation", fields: [ownerId], references: [id], onDelete: SetNull)
+  bids             Bid[]
+  purchases        Purchase[]
+  auctionHighBids  Auction[]   @relation("AuctionHighBidTeam")
+  memberships      RoomMembership[]
+
+  @@index([tournamentId])
+}
+
+model Player {
+  id            String         @id @default(cuid())
+  tournamentId  String
+  name          String
+  age           Int
+  position      PlayerPosition
+  experience    Int
+  basePrice     Int            @default(100)
+  status        PlayerStatus   @default(REGISTERED)
+  photoUrl      String?
+  photoPublicId String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  tournament    Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  bids          Bid[]
+  purchase      Purchase?
+  currentAuctions Auction[]    @relation("CurrentPlayer")
+
+  @@index([tournamentId, status])
+  @@index([name])
+}
+
+model Auction {
+  id                  String          @id @default(cuid())
+  tournamentId        String          @unique
+  status              AuctionStatus   @default(DRAFT)
+  currentPlayerId     String?         @unique
+  currentHighestBid    Int             @default(0)
+  highestBidTeamId    String?
+  endsAt              DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  tournament          Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  currentPlayer       Player?         @relation("CurrentPlayer", fields: [currentPlayerId], references: [id], onDelete: SetNull)
+  highestBidTeam      Team?           @relation("AuctionHighBidTeam", fields: [highestBidTeamId], references: [id], onDelete: SetNull)
+  bids               Bid[]
+  purchases          Purchase[]
+  events             AuctionEvent[]
+
+  @@index([status])
+}
+
+model Bid {
+  id         String     @id @default(cuid())
+  auctionId  String
+  playerId   String
+  teamId     String
+  amount     Int
+  status     BidStatus  @default(ACTIVE)
+  createdAt  DateTime   @default(now())
+
+  auction    Auction    @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId, playerId])
+  @@index([teamId])
+}
+
+model Purchase {
+  id         String          @id @default(cuid())
+  auctionId  String
+  playerId   String          @unique
+  teamId     String
+  price      Int
+  status     PurchaseStatus  @default(CONFIRMED)
+  createdAt  DateTime        @default(now())
+
+  auction    Auction         @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  player     Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team       Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId])
+  @@index([teamId])
+}
+
+model AuctionEvent {
+  id         String           @id @default(cuid())
+  auctionId  String
+  type       AuctionEventType
+  message    String
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+
+  auction    Auction          @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId, createdAt])
+}
+
+model AuctionRoom {
+  id                    String                    @id @default(cuid())
+  tournamentId           String
+  roomCode              String                    @unique
+  passcodeHash          String
+  roomName              String
+  description           String?
+  status                AuctionRoomStatus         @default(WAITING)
+  createdBy             String?
+  auctioneerId          String?
+  maximumTeams          Int                       @default(4)
+  teamBudget            Int                       @default(5000)
+  squadSize             Int                       @default(7)
+  startingPrice         Int                       @default(100)
+  bidIncrement          Int                       @default(100)
+  countdownSeconds      Int                       @default(20)
+  lateBidExtensionSeconds Int                     @default(10)
+  createdAt             DateTime                  @default(now())
+  startedAt             DateTime?
+  completedAt           DateTime?
+
+  tournament            Tournament                @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  creator               User?                     @relation("CreatedRooms", fields: [createdBy], references: [id], onDelete: SetNull)
+  auctioneer            User?                     @relation("AuctioneerRooms", fields: [auctioneerId], references: [id], onDelete: SetNull)
+  memberships           RoomMembership[]
+
+  @@index([tournamentId, status])
+}
+
+model RoomMembership {
+  id               String                            @id @default(cuid())
+  roomId           String
+  teamId           String
+  userId           String
+  joinedAt         DateTime                          @default(now())
+  connectionStatus RoomMembershipConnectionStatus    @default(ONLINE)
+
+  room             AuctionRoom                       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  team             Team                              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user             User                              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, teamId])
+  @@unique([roomId, userId])
+  @@index([roomId, connectionStatus])
+}
