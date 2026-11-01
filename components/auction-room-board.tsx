@@ -121,11 +121,11 @@ export function AuctionRoomBoard({
       <div className="mx-auto max-w-[1450px]">
         <div className="mb-5 flex items-center justify-between rounded-[24px] border border-sky-500/30 bg-[#0a162d]/90 px-4 py-3 shadow-[0_0_35px_rgba(14,165,233,0.15)]">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-base font-black text-slate-950 shadow-[0_0_18px_rgba(251,191,36,0.5)]">
-              VPL
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-xs font-black text-slate-950 shadow-[0_0_18px_rgba(251,191,36,0.5)]">
+              NGPL
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.28em] text-sky-200">Volleyball</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-sky-200">Narayana Guru</div>
               <div className="text-sm font-black tracking-wide text-white">Premier League</div>
             </div>
           </div>
@@ -257,9 +257,17 @@ export function AuctionRoomBoard({
                 <div className="text-[10px] uppercase tracking-[0.28em] text-sky-200">Current player</div>
                 <h2 className="mt-2 text-3xl font-black text-white">{currentPlayer?.name ?? 'No player selected'}</h2>
                 <div className="mt-2 flex items-center justify-center gap-3 text-sm text-slate-300">
-                  <span>{currentPlayer?.position ?? 'Waiting for selection'}</span>
-                  <span>•</span>
-                  <span>Age {currentPlayer?.age ?? '—'}</span>
+                  <span>
+                    {(() => {
+                      const u = String(currentPlayer?.position || '').trim().toUpperCase();
+                      if (u === 'OUTSIDE_HITTER' || u === 'ATTACKER') return 'Attacker';
+                      if (u === 'LIBERO') return 'Libero';
+                      if (u === 'DEFENSIVE_SPECIALIST' || u === 'DEFENCE') return 'Defence';
+                      if (u === 'SETTER') return 'Setter';
+                      if (u === 'MIDDLE_BLOCKER' || u === 'OPPOSITE' || u === 'ALL_ROUNDER') return 'All Rounder';
+                      return currentPlayer?.position ?? 'Waiting for selection';
+                    })()}
+                  </span>
                 </div>
               </div>
 

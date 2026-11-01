@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
 
         <section className="grid gap-6 md:grid-cols-3">
           {[
-            { label: 'Tournament', value: 'Volleyball Premier League', icon: Trophy },
+            { label: 'Tournament', value: 'Narayana Guru Premier League', icon: Trophy },
             { label: 'Active Rooms', value: '1 room', icon: Building2 },
             { label: 'System Status', value: 'Operational', icon: ShieldCheck },
           ].map(({ label, value, icon: Icon }) => (
@@ -64,8 +64,8 @@ export default function AdminDashboardPage() {
               <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-lg font-bold">VPL SEASON 1 AUCTION</div>
-                    <div className="text-sm text-slate-400">Room code: VPL2026 • Waiting for owners</div>
+                    <div className="text-lg font-bold">NGPL SEASON 1 AUCTION</div>
+                    <div className="text-sm text-slate-400">Waiting for room owners</div>
                   </div>
                   <Link href="/admin/rooms/create" className="text-sm text-sky-300 hover:text-sky-200">Manage</Link>
                 </div>

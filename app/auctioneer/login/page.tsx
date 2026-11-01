@@ -57,7 +57,7 @@ export default function AuctioneerLoginPage() {
 
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-[30px] border border-[#FFB800]/50 bg-[#FFB800]/8 shadow-[0_0_40px_rgba(255,184,0,0.16)] sm:h-48 sm:w-48 lg:h-56 lg:w-56">
-                <img src="/logo.png" alt="VPL logo" className="h-full w-full object-contain p-3" />
+                <img src="/logo.png" alt="NGPL logo" className="h-full w-full object-contain p-3" />
               </div>
 
               <h1 className="mt-7 font-condensed text-[2.4rem] font-black leading-[0.86] tracking-[-0.06em] text-white sm:text-[3rem] lg:text-[4.2rem]">

@@ -35,10 +35,9 @@ export default function LiveAuctionPage() {
                 <Badge variant="warning">Open</Badge>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div><span className="text-sm text-slate-500">Age</span><p className="font-semibold">24</p></div>
-                <div><span className="text-sm text-slate-500">Position</span><p className="font-semibold">Outside Hitter</p></div>
+                <div><span className="text-sm text-slate-500">Position</span><p className="font-semibold">Attacker</p></div>
                 <div><span className="text-sm text-slate-500">Experience</span><p className="font-semibold">7 years</p></div>
-                <div><span className="text-sm text-slate-500">Base price</span><p className="font-semibold">₹500</p></div>
+                <div><span className="text-sm text-slate-500">Base price</span><p className="font-semibold">₹50</p></div>
               </div>
             </CardContent>
           </Card>

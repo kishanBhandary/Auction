@@ -3,7 +3,12 @@ import { getSupabaseServerClient } from '@/lib/supabase';
 
 export async function getAuctionRoomSnapshot() {
   const tournament = await prisma.tournament.findFirst({
-    where: { name: 'Volleyball Premier League' },
+    where: {
+      OR: [
+        { name: 'Narayana Guru Premier League' },
+        { name: 'Volleyball Premier League' }
+      ]
+    },
     include: {
       teams: {
         include: {
@@ -32,7 +37,7 @@ export async function getAuctionRoomSnapshot() {
   });
 
   if (!tournament) {
-    throw new Error('Volleyball Premier League tournament not found');
+    throw new Error('Narayana Guru Premier League tournament not found');
   }
 
   let auction = tournament.auction;
@@ -87,7 +92,7 @@ export async function getAuctionRoomSnapshot() {
     : 0;
 
   return {
-    roomName: 'Volleyball Premier League Auction Room',
+    roomName: 'Narayana Guru Premier League Auction Room',
     tournamentName: tournament.name,
     auctionStatus: auction.status,
     currentPlayer: liveCurrentPlayer

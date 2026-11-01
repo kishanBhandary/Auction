@@ -21,7 +21,7 @@ import {
   CircleDot,
   CheckCircle2,
 } from 'lucide-react';
-import { VplLogo, TeamAlphaLion, TeamBravoBull, TeamCharlieWolf, TeamDeltaHorse } from '@/components/icons/team-icons';
+import { VplLogo } from '@/components/icons/team-icons';
 import { PlayerPortrait } from '@/components/player-portrait';
 import { supabase } from '@/lib/supabase';
 
@@ -299,7 +299,16 @@ function AuctioneerControlContent() {
                 {filteredPlayers.map((player: any, idx: number) => {
                   const isSelected = player.id === activePlayer?.id;
                   const auctionNum = String(idx + 1).padStart(2, '0');
-                  const posLabel = (player.position || 'OUTSIDE_HITTER').replace('_', ' ');
+                  const formatPos = (p: string) => {
+                    const u = String(p || '').trim().toUpperCase();
+                    if (u === 'OUTSIDE_HITTER' || u === 'ATTACKER') return 'Attacker';
+                    if (u === 'LIBERO') return 'Libero';
+                    if (u === 'DEFENSIVE_SPECIALIST' || u === 'DEFENCE') return 'Defence';
+                    if (u === 'SETTER') return 'Setter';
+                    if (u === 'MIDDLE_BLOCKER' || u === 'OPPOSITE' || u === 'ALL_ROUNDER') return 'All Rounder';
+                    return p.replace('_', ' ');
+                  };
+                  const posLabel = formatPos(player.position || 'OUTSIDE_HITTER');
 
                   return (
                     <div
@@ -375,29 +384,45 @@ function AuctioneerControlContent() {
                     {/* Gold Position Badge */}
                     <div className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-400 text-slate-950 font-heading text-xs font-bold uppercase tracking-wider">
                       <span>🏃</span>
-                      <span>{(activePlayer?.position || 'Opposite Hitter').replace('_', ' ')}</span>
+                      <span>
+                        {(() => {
+                          const u = String(activePlayer?.position || '').trim().toUpperCase();
+                          if (u === 'OUTSIDE_HITTER' || u === 'ATTACKER') return 'Attacker';
+                          if (u === 'LIBERO') return 'Libero';
+                          if (u === 'DEFENSIVE_SPECIALIST' || u === 'DEFENCE') return 'Defence';
+                          if (u === 'SETTER') return 'Setter';
+                          if (u === 'MIDDLE_BLOCKER' || u === 'OPPOSITE' || u === 'ALL_ROUNDER') return 'All Rounder';
+                          return (activePlayer?.position || 'Attacker').replace('_', ' ');
+                        })()}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Player Stats Grid */}
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-xl border border-white/5 bg-slate-950/60 p-2">
-                    <span className="text-[10px] font-heading uppercase text-slate-400">Age</span>
-                    <p className="font-condensed text-base font-bold text-white">{activePlayer?.age || 22}</p>
+                    <span className="text-[10px] font-heading uppercase text-slate-400">Position</span>
+                    <p className="font-condensed text-sm font-bold text-white truncate">
+                      {(() => {
+                        const u = String(activePlayer?.position || '').trim().toUpperCase();
+                        if (u === 'OUTSIDE_HITTER' || u === 'ATTACKER') return 'Attacker';
+                        if (u === 'LIBERO') return 'Libero';
+                        if (u === 'DEFENSIVE_SPECIALIST' || u === 'DEFENCE') return 'Defence';
+                        if (u === 'SETTER') return 'Setter';
+                        if (u === 'MIDDLE_BLOCKER' || u === 'OPPOSITE' || u === 'ALL_ROUNDER') return 'All Rounder';
+                        return (activePlayer?.position || 'Attacker').replace('_', ' ');
+                      })()}
+                    </p>
                   </div>
                   <div className="rounded-xl border border-white/5 bg-slate-950/60 p-2">
-                    <span className="text-[10px] font-heading uppercase text-slate-400">Height</span>
-                    <p className="font-condensed text-base font-bold text-white">{activePlayer?.height || 194} cm</p>
-                  </div>
-                  <div className="rounded-xl border border-white/5 bg-slate-950/60 p-2">
-                    <span className="text-[10px] font-heading uppercase text-slate-400">Experience</span>
-                    <p className="font-condensed text-base font-bold text-white">{activePlayer?.experience || 3} Years</p>
+                    <span className="text-[10px] font-heading uppercase text-slate-400">Status</span>
+                    <p className="font-condensed text-sm font-bold text-emerald-400 uppercase">{activePlayer?.status || 'POOL'}</p>
                   </div>
                   <div className="rounded-xl border border-white/5 bg-slate-950/60 p-2">
                     <span className="text-[10px] font-heading uppercase text-slate-400">Base Price</span>
-                    <p className="font-condensed text-base font-black text-amber-300">
-                      ₹{Number(activePlayer?.basePrice || 1000).toLocaleString('en-IN')}
+                    <p className="font-condensed text-sm font-black text-amber-300">
+                      ₹{Number(activePlayer?.basePrice || 50).toLocaleString('en-IN')}
                     </p>
                   </div>
                 </div>
@@ -441,61 +466,48 @@ function AuctioneerControlContent() {
 
               {/* Team Rows */}
               <div className="mt-2 space-y-3">
-                {/* Team Alpha */}
-                <div className="grid grid-cols-12 items-center py-2 px-1 rounded-xl bg-slate-950/40 border border-sky-500/20">
-                  <div className="col-span-5 flex items-center gap-2">
-                    <TeamAlphaLion className="h-6 w-6" />
-                    <span className="font-heading text-xs font-bold text-white">Alpha</span>
+                {dbTeams.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/40 p-4 text-center text-xs text-slate-400 font-sans">
+                    No teams have joined yet.
+                    <div className="mt-2 text-sky-400 font-mono text-[11px]">
+                      Share room code with team owners to join.
+                    </div>
                   </div>
-                  <div className="col-span-4 text-right font-condensed text-xs font-bold text-amber-300">
-                    ₹3,400
-                  </div>
-                  <div className="col-span-3 text-right font-mono text-xs text-slate-300">
-                    3 / 7
-                  </div>
-                </div>
-
-                {/* Team Bravo */}
-                <div className="grid grid-cols-12 items-center py-2 px-1 rounded-xl bg-slate-950/40 border border-red-500/20">
-                  <div className="col-span-5 flex items-center gap-2">
-                    <TeamBravoBull className="h-6 w-6" />
-                    <span className="font-heading text-xs font-bold text-white">Bravo</span>
-                  </div>
-                  <div className="col-span-4 text-right font-condensed text-xs font-bold text-amber-300">
-                    ₹5,000
-                  </div>
-                  <div className="col-span-3 text-right font-mono text-xs text-slate-300">
-                    0 / 7
-                  </div>
-                </div>
-
-                {/* Team Charlie */}
-                <div className="grid grid-cols-12 items-center py-2 px-1 rounded-xl bg-slate-950/40 border border-emerald-500/20">
-                  <div className="col-span-5 flex items-center gap-2">
-                    <TeamCharlieWolf className="h-6 w-6" />
-                    <span className="font-heading text-xs font-bold text-white">Charlie</span>
-                  </div>
-                  <div className="col-span-4 text-right font-condensed text-xs font-bold text-amber-300">
-                    ₹4,200
-                  </div>
-                  <div className="col-span-3 text-right font-mono text-xs text-slate-300">
-                    1 / 7
-                  </div>
-                </div>
-
-                {/* Team Delta */}
-                <div className="grid grid-cols-12 items-center py-2 px-1 rounded-xl bg-slate-950/40 border border-purple-500/20">
-                  <div className="col-span-5 flex items-center gap-2">
-                    <TeamDeltaHorse className="h-6 w-6" />
-                    <span className="font-heading text-xs font-bold text-white">Delta</span>
-                  </div>
-                  <div className="col-span-4 text-right font-condensed text-xs font-bold text-amber-300">
-                    ₹4,800
-                  </div>
-                  <div className="col-span-3 text-right font-mono text-xs text-slate-300">
-                    1 / 7
-                  </div>
-                </div>
+                ) : (
+                  dbTeams.map((team: any, index: number) => {
+                    const mascotColors = [
+                      'border-sky-500/30 text-sky-400',
+                      'border-red-500/30 text-red-400',
+                      'border-emerald-500/30 text-emerald-400',
+                      'border-purple-500/30 text-purple-400',
+                    ];
+                    const colorClass = mascotColors[index % mascotColors.length];
+                    return (
+                      <div
+                        key={team.id}
+                        className={`grid grid-cols-12 items-center py-2 px-2 rounded-xl bg-slate-950/50 border ${colorClass}`}
+                      >
+                        <div className="col-span-5 flex items-center gap-2 truncate">
+                          {team.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={team.logoUrl} alt={team.name} className="h-6 w-6 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <span className="text-sm">🛡️</span>
+                          )}
+                          <span className="font-heading text-xs font-bold text-white truncate" title={team.name}>
+                            {team.name}
+                          </span>
+                        </div>
+                        <div className="col-span-4 text-right font-condensed text-xs font-bold text-amber-300">
+                          ₹{Number(team.remainingBudget ?? 5000).toLocaleString('en-IN')}
+                        </div>
+                        <div className="col-span-3 text-right font-mono text-xs text-slate-300">
+                          {team.purchasedCount ?? 0} / {team.squadCapacity ?? 7}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               {/* Tournament Summary Card */}
@@ -503,7 +515,7 @@ function AuctioneerControlContent() {
                 <div className="rounded-xl border border-white/5 bg-slate-950/70 p-3 text-xs space-y-2">
                   <div className="flex justify-between text-slate-400">
                     <span>Tournament</span>
-                    <span className="text-white font-bold">VPL 2026</span>
+                    <span className="text-white font-bold">NGPL 2026</span>
                   </div>
                   <div className="flex justify-between text-slate-400">
                     <span>Squad Capacity</span>

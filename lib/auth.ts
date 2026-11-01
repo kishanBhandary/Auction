@@ -30,35 +30,7 @@ export const FALLBACK_USERS: Record<
   'auctioneer@vpl.local': {
     password: 'Vpl@2026!',
     role: 'AUCTIONEER',
-    name: 'Kishan Bhandary',
-  },
-  'alpha.owner@vpl.local': {
-    password: 'Vpl@2026!',
-    role: 'TEAM_OWNER',
-    name: 'Rahul Verma',
-    teamId: 'team-alpha',
-    teamName: 'Team Alpha',
-  },
-  'bravo.owner@vpl.local': {
-    password: 'Vpl@2026!',
-    role: 'TEAM_OWNER',
-    name: 'Karan Mehta',
-    teamId: 'team-bravo',
-    teamName: 'Team Bravo',
-  },
-  'charlie.owner@vpl.local': {
-    password: 'Vpl@2026!',
-    role: 'TEAM_OWNER',
-    name: 'Aditya Sen',
-    teamId: 'team-charlie',
-    teamName: 'Team Charlie',
-  },
-  'delta.owner@vpl.local': {
-    password: 'Vpl@2026!',
-    role: 'TEAM_OWNER',
-    name: 'Vivek Nair',
-    teamId: 'team-delta',
-    teamName: 'Team Delta',
+    name: 'Auctioneer',
   },
 };
 

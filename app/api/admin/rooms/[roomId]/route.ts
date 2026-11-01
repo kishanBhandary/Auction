@@ -143,21 +143,31 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
 
     const teams = (tournament.teams || []).map((team) => {
       const purchases = team.purchases || [];
+      const iconPur = purchases.find((p) => p.price === 0) || (purchases.length > 0 ? purchases[0] : null);
       return {
         id: team.id,
         name: team.name,
         shortName: team.shortName,
-        ownerName: team.owner?.name || (team.name === 'Team Alpha' ? 'Rahul Verma' : team.name === 'Team Bravo' ? 'Karan Mehta' : team.name === 'Team Charlie' ? 'Aditya Sen' : 'Vivek Nair'),
+        logoUrl: team.logoUrl,
+        ownerName: team.owner?.name || 'Awaiting Owner',
         budget: team.budget,
         remainingBudget: team.remainingBudget,
         purchasedCount: purchases.length,
         squadCapacity: room.squadSize || 7,
+        iconPlayer: iconPur ? {
+          id: iconPur.player.id,
+          name: iconPur.player.name,
+          photoUrl: iconPur.player.photoUrl,
+          position: iconPur.player.position,
+        } : null,
         purchases: purchases.map((pur) => ({
           id: pur.id,
           playerId: pur.playerId,
           playerName: pur.player.name,
           playerPhoto: pur.player.photoUrl,
+          position: pur.player.position,
           price: pur.price,
+          isIcon: pur.price === 0,
         })),
       };
     });
@@ -211,6 +221,53 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
   } catch (error) {
     return NextResponse.json(
       { ok: false, message: error instanceof Error ? error.message : 'Failed to load room.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  try {
+    const session = await getSession();
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'AUCTIONEER'].includes(session.role)) {
+      return NextResponse.json({ ok: false, message: 'Access denied.' }, { status: 403 });
+    }
+
+    const { roomId } = await params;
+    const room = await prisma.auctionRoom.findFirst({
+      where: {
+        OR: [{ id: roomId }, { roomCode: roomId }],
+      },
+      include: {
+        tournament: {
+          include: {
+            auction: true,
+          },
+        },
+      },
+    });
+
+    if (!room) {
+      return NextResponse.json({ ok: false, message: 'Room not found.' }, { status: 404 });
+    }
+
+    // Delete memberships first
+    await prisma.roomMembership.deleteMany({
+      where: { roomId: room.id },
+    });
+
+    // Delete room
+    await prisma.auctionRoom.delete({
+      where: { id: room.id },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      message: `Auction room ${room.roomCode} deleted successfully.`,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, message: error instanceof Error ? error.message : 'Failed to delete room.' },
       { status: 500 }
     );
   }

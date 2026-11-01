@@ -1,7 +1,7 @@
 export const appConfig = {
-  appName: process.env.NEXT_PUBLIC_APP_NAME ?? 'Volleyball Premier League',
+  appName: process.env.NEXT_PUBLIC_APP_NAME ?? 'Narayana Guru Premier League',
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
-  tournamentName: 'Volleyball Premier League',
+  tournamentName: 'Narayana Guru Premier League',
   teams: [
     { name: 'Team Alpha', shortName: 'ALP', logo: '/team-alpha.png' },
     { name: 'Team Bravo', shortName: 'BRV', logo: '/team-bravo.png' },

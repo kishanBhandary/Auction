@@ -24,35 +24,47 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await getSession();
-    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.role)) {
-      return NextResponse.json({ ok: false, message: 'Admin access required.' }, { status: 403 });
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'AUCTIONEER'].includes(session.role)) {
+      return NextResponse.json({ ok: false, message: 'Admin or Auctioneer access required.' }, { status: 403 });
     }
 
     const body = await request.json();
-    const roomName = String(body.roomName || body.name || 'VPL SEASON 1 AUCTION').trim();
-    const description = String(body.description || 'Official auction room for the Volleyball Premier League').trim();
-    const tournamentName = String(body.tournamentName || 'Volleyball Premier League').trim();
+    const roomName = String(body.roomName || body.name || 'NGPL SEASON 1 AUCTION').trim();
+    const description = String(body.description || 'Official auction room for the Narayana Guru Premier League').trim();
+    const tournamentName = String(body.tournamentName || 'Narayana Guru Premier League').trim();
     const auctioneerEmail = String(body.auctioneerEmail || 'auctioneer@vpl.local').trim();
     const maximumTeams = Number(body.maximumTeams || 4);
 
-    const tournament = await prisma.tournament.upsert({
-      where: { name: tournamentName },
-      update: {},
-      create: {
-        name: tournamentName,
-        status: 'SCHEDULED',
-        numberOfTeams: 4,
-        maxPlayersPerTeam: 7,
-        playingPlayers: 6,
-        substitutePlayers: 1,
-        teamAuctionBudget: 5000,
-        totalAuctionBudget: 20000,
-        basePlayerPrice: 100,
-        minimumBidIncrement: 100,
-        initialAuctionCountdownSeconds: 20,
-        lateBidExtensionSeconds: 10,
+    let tournament = await prisma.tournament.findFirst({
+      where: {
+        OR: [
+          { name: tournamentName },
+          { name: 'Narayana Guru Premier League' },
+          { name: 'Volleyball Premier League' }
+        ]
       },
+      include: { players: true }
     });
+
+    if (!tournament) {
+      tournament = await prisma.tournament.create({
+        data: {
+          name: tournamentName || 'Narayana Guru Premier League',
+          status: 'SCHEDULED',
+          numberOfTeams: maximumTeams,
+          maxPlayersPerTeam: Number(body.squadSize || 7),
+          playingPlayers: 6,
+          substitutePlayers: 1,
+          teamAuctionBudget: Number(body.teamBudget || 5000),
+          totalAuctionBudget: Number(body.teamBudget || 5000) * maximumTeams,
+          basePlayerPrice: Number(body.startingPrice || 1000),
+          minimumBidIncrement: Number(body.bidIncrement || 100),
+          initialAuctionCountdownSeconds: Number(body.countdownSeconds || 20),
+          lateBidExtensionSeconds: Number(body.lateBidExtensionSeconds || 10),
+        },
+        include: { players: true }
+      });
+    }
 
     const auctioneer = await prisma.user.findUnique({ where: { email: auctioneerEmail.toLowerCase() } });
 
@@ -77,13 +89,14 @@ export async function POST(request: Request) {
         maximumTeams,
         teamBudget: Number(body.teamBudget || 5000),
         squadSize: Number(body.squadSize || 7),
-        startingPrice: Number(body.startingPrice || 100),
+        startingPrice: Number(body.startingPrice || 1000),
         bidIncrement: Number(body.bidIncrement || 100),
         countdownSeconds: Number(body.countdownSeconds || 20),
         lateBidExtensionSeconds: Number(body.lateBidExtensionSeconds || 10),
       },
     });
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     return NextResponse.json({
       ok: true,
       room: {
@@ -91,7 +104,7 @@ export async function POST(request: Request) {
         roomCode: room.roomCode,
         roomName: room.roomName,
         passcode,
-        invitation: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/team/join-room?code=${room.roomCode}`,
+        invitation: `${appUrl}/team/join?roomCode=${room.roomCode}`,
       },
     });
   } catch (error) {

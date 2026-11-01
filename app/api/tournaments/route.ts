@@ -12,7 +12,7 @@ export async function GET() {
       ok: true,
       tournament: tournament ?? {
         id: 'demo-tournament',
-        name: 'Volleyball Premier League',
+        name: 'Narayana Guru Premier League',
         status: 'SCHEDULED',
         totalTeams: 4,
       },
@@ -22,7 +22,7 @@ export async function GET() {
       ok: true,
       tournament: {
         id: 'demo-tournament',
-        name: 'Volleyball Premier League',
+        name: 'Narayana Guru Premier League',
         status: 'SCHEDULED',
         totalTeams: 4,
       },

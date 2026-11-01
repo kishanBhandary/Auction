@@ -11,9 +11,14 @@ export async function POST() {
     }
 
     const tournament = await prisma.tournament.findFirst({
-      where: { name: 'Volleyball Premier League' },
+      where: {
+        OR: [
+          { name: 'Narayana Guru Premier League' },
+          { name: 'Volleyball Premier League' }
+        ]
+      },
       include: { teams: true },
-    });
+    }) ?? await prisma.tournament.findFirst({ include: { teams: true } });
 
     if (!tournament) {
       return NextResponse.json({ ok: false, message: 'Tournament not found.' }, { status: 404 });

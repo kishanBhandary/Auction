@@ -32,7 +32,7 @@ export default function AdminRoomsPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-xl font-black">{room.roomName}</div>
-                  <div className="mt-1 text-sm text-slate-400">{room.tournament?.name || 'Volleyball Premier League'} • {room.roomCode}</div>
+                  <div className="mt-1 text-sm text-slate-400">{room.tournament?.name || 'Narayana Guru Premier League'} • {room.roomCode}</div>
                 </div>
                 <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[0.62rem] uppercase tracking-[0.18em] text-emerald-200">{room.status}</span>
               </div>

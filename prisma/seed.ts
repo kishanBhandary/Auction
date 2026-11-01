@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const tournament = await prisma.tournament.upsert({
-    where: { name: 'Volleyball Premier League' },
+    where: { name: 'Narayana Guru Premier League' },
     update: {
       numberOfTeams: 4,
       maxPlayersPerTeam: 7,
@@ -14,7 +14,7 @@ async function main() {
       initialAuctionCountdownSeconds: 20,
     },
     create: {
-      name: 'Volleyball Premier League',
+      name: 'Narayana Guru Premier League',
       status: TournamentStatus.SCHEDULED,
       numberOfTeams: 4,
       maxPlayersPerTeam: 7,
@@ -175,7 +175,7 @@ async function main() {
     room = await prisma.auctionRoom.create({
       data: {
         tournamentId: tournament.id,
-        roomName: 'Volleyball Premier League Arena',
+        roomName: 'Narayana Guru Premier League Arena',
         roomCode: 'VPL2026',
         passcodeHash: 'VPLPASS',
         status: 'LIVE',

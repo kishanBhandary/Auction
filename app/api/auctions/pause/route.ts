@@ -10,7 +10,14 @@ export async function POST() {
       return NextResponse.json({ ok: false, message: 'Auctioneer access required.' }, { status: 403 });
     }
 
-    const tournament = await prisma.tournament.findFirst({ where: { name: 'Volleyball Premier League' } });
+    const tournament = await prisma.tournament.findFirst({
+      where: {
+        OR: [
+          { name: 'Narayana Guru Premier League' },
+          { name: 'Volleyball Premier League' }
+        ]
+      }
+    }) ?? await prisma.tournament.findFirst();
     if (!tournament) {
       return NextResponse.json({ ok: false, message: 'Tournament not found.' }, { status: 404 });
     }

@@ -9,7 +9,7 @@ export default function AboutPage() {
       <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-10">
           <div className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-600">About the league</div>
-          <h1 className="mt-3 text-4xl font-black text-slate-900">Volleyball Premier League</h1>
+          <h1 className="mt-3 text-4xl font-black text-slate-900">Narayana Guru Premier League</h1>
         </div>
         <div className="grid gap-6 md:grid-cols-2">
           <Card>

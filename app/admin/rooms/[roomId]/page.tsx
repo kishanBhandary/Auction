@@ -46,7 +46,7 @@ function AdminRoomDetailContent() {
               <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[0.62rem] uppercase tracking-[0.18em] text-emerald-200">{room.status}</span>
             </div>
             <div className="text-3xl font-black tracking-[0.18em] text-sky-200">{room.roomCode}</div>
-            <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4 text-sm text-slate-300">{room.description || 'Official VPL bidding room.'}</div>
+            <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4 text-sm text-slate-300">{room.description || 'Official NGPL bidding room.'}</div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4"><div className="text-[0.62rem] uppercase tracking-[0.2em] text-slate-400">Tournament</div><div className="mt-2 text-lg font-semibold">{room.tournament.name}</div></div>
               <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-4"><div className="text-[0.62rem] uppercase tracking-[0.2em] text-slate-400">Teams</div><div className="mt-2 text-lg font-semibold">{room.memberships.length}/{room.maximumTeams}</div></div>

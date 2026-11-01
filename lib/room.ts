@@ -7,14 +7,7 @@ export const TEAM_COLORS = {
   DELTA: 'from-violet-500/30 to-purple-500/10 border-violet-400/40',
 } as const;
 
-export const DEFAULT_TOURNAMENT_NAME = 'Volleyball Premier League';
-
-export const DEFAULT_TEAM_NAMES = [
-  { name: 'Team Alpha', shortName: 'ALP' },
-  { name: 'Team Bravo', shortName: 'BRV' },
-  { name: 'Team Charlie', shortName: 'CHA' },
-  { name: 'Team Delta', shortName: 'DEL' },
-];
+export const DEFAULT_TOURNAMENT_NAME = 'Narayana Guru Premier League';
 
 export const DEFAULT_ROOM_SETTINGS = {
   maximumTeams: 4,
@@ -26,11 +19,11 @@ export const DEFAULT_ROOM_SETTINGS = {
   bidIncrement: 100,
   countdownSeconds: 20,
   lateBidExtensionSeconds: 10,
-};
+};  
 
 export function generateRoomCode() {
-  const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `VPL${new Date().getFullYear()}${suffix}`;
+  const num = Math.floor(1000 + Math.random() * 9000);
+  return `NPL-${num}`;
 }
 
 export function generatePasscode() {

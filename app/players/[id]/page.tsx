@@ -26,10 +26,20 @@ export default function PlayerDetailPage() {
                 <Badge variant="success">{player.status}</Badge>
               </div>
               <div className="mt-5 space-y-3 text-slate-600">
-                <p><strong>Position:</strong> {player.position}</p>
-                <p><strong>Age:</strong> {player.age}</p>
+                <p>
+                  <strong>Position:</strong>{' '}
+                  {(() => {
+                    const u = String(player.position || '').trim().toUpperCase();
+                    if (u === 'OUTSIDE_HITTER' || u === 'ATTACKER') return 'Attacker';
+                    if (u === 'LIBERO') return 'Libero';
+                    if (u === 'DEFENSIVE_SPECIALIST' || u === 'DEFENCE') return 'Defence';
+                    if (u === 'SETTER') return 'Setter';
+                    if (u === 'MIDDLE_BLOCKER' || u === 'OPPOSITE' || u === 'ALL_ROUNDER') return 'All Rounder';
+                    return player.position;
+                  })()}
+                </p>
                 <p><strong>Experience:</strong> {player.experience} years</p>
-                <p><strong>Base price:</strong> {player.basePrice}</p>
+                <p><strong>Base price:</strong> ₹{player.basePrice}</p>
               </div>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">

@@ -6,14 +6,19 @@ import { broadcastRoomUpdate } from '@/lib/auction-room';
 export async function POST() {
   try {
     const session = await getSession();
-    if (!session || session.role !== 'AUCTIONEER') {
+    if (!session || !['AUCTIONEER', 'ADMIN', 'SUPER_ADMIN'].includes(session.role)) {
       return NextResponse.json({ ok: false, message: 'Auctioneer access required.' }, { status: 403 });
     }
 
     const tournament = await prisma.tournament.findFirst({
-      where: { name: 'Volleyball Premier League' },
+      where: {
+        OR: [
+          { name: 'Narayana Guru Premier League' },
+          { name: 'Volleyball Premier League' }
+        ]
+      },
       include: { players: true },
-    });
+    }) ?? await prisma.tournament.findFirst({ include: { players: true } });
 
     if (!tournament) {
       return NextResponse.json({ ok: false, message: 'Tournament not found.' }, { status: 404 });

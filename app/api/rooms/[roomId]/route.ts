@@ -139,21 +139,31 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
     // Format all 4 teams
     const teams = (tournament.teams || []).map((team) => {
       const purchases = team.purchases || [];
+      const iconPur = purchases.find((p) => p.price === 0) || (purchases.length > 0 ? purchases[0] : null);
       return {
         id: team.id,
         name: team.name,
         shortName: team.shortName,
-        ownerName: team.owner?.name || (team.name === 'Team Alpha' ? 'Rahul Verma' : team.name === 'Team Bravo' ? 'Karan Mehta' : team.name === 'Team Charlie' ? 'Aditya Sen' : 'Vivek Nair'),
+        logoUrl: team.logoUrl,
+        ownerName: team.owner?.name || 'Awaiting Owner',
         budget: team.budget,
         remainingBudget: team.remainingBudget,
         purchasedCount: purchases.length,
         squadCapacity: room.squadSize || 7,
+        iconPlayer: iconPur ? {
+          id: iconPur.player.id,
+          name: iconPur.player.name,
+          photoUrl: iconPur.player.photoUrl,
+          position: iconPur.player.position,
+        } : null,
         purchases: purchases.map((pur) => ({
           id: pur.id,
           playerId: pur.playerId,
           playerName: pur.player.name,
           playerPhoto: pur.player.photoUrl,
+          position: pur.player.position,
           price: pur.price,
+          isIcon: pur.price === 0,
         })),
       };
     });
@@ -238,6 +248,39 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
   } catch (error) {
     return NextResponse.json(
       { ok: false, message: error instanceof Error ? error.message : 'Failed to load room.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  try {
+    const { roomId } = await params;
+    const room = await prisma.auctionRoom.findFirst({
+      where: {
+        OR: [{ id: roomId }, { roomCode: roomId }],
+      },
+    });
+
+    if (!room) {
+      return NextResponse.json({ ok: false, message: 'Room not found.' }, { status: 404 });
+    }
+
+    await prisma.roomMembership.deleteMany({
+      where: { roomId: room.id },
+    });
+
+    await prisma.auctionRoom.delete({
+      where: { id: room.id },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      message: `Auction room ${room.roomCode} deleted successfully.`,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, message: error instanceof Error ? error.message : 'Failed to delete room.' },
       { status: 500 }
     );
   }

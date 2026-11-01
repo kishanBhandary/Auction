@@ -22,12 +22,12 @@ const orbitron = Orbitron({
 const barlowCondensed = Barlow_Condensed({
   variable: '--font-barlow-condensed',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
-  title: 'Volleyball Premier League Auction',
-  description: 'Live player auction platform for the Volleyball Premier League.',
+  title: 'Narayana Guru Premier League Auction',
+  description: 'Live player auction platform for the Narayana Guru Premier League.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -23,11 +23,7 @@ import {
 } from 'lucide-react';
 import {
   VplLogo,
-  TeamAlphaLion,
-  TeamBravoBull,
-  TeamCharlieWolf,
-  TeamDeltaHorse,
-  getTeamLogo,
+  TeamSlotBadge,
 } from '@/components/icons/team-icons';
 import { PlayerPortrait } from '@/components/player-portrait';
 import { supabase } from '@/lib/supabase';
@@ -186,70 +182,30 @@ function LiveAuctionBoard() {
     }
   };
 
-  // Helper team lookups
-  const teamAlpha = dbTeams.find((t: any) => t.name.toLowerCase().includes('alpha')) || {
-    name: 'TEAM ALPHA',
-    ownerName: 'Rahul Verma',
-    remainingBudget: 3400,
-    purchasedCount: 3,
-    squadCapacity: 7,
-    purchases: [
-      { id: '1', playerName: 'Sujith P.' },
-      { id: '2', playerName: 'Karthik R.' },
-      { id: '3', playerName: 'Manav S.' },
-    ],
-  };
+  // Four dynamic teams mapped to the 4 corners of the gaming board
+  const teamSlot0 = dbTeams[0] || null;
+  const teamSlot1 = dbTeams[1] || null;
+  const teamSlot2 = dbTeams[2] || null;
+  const teamSlot3 = dbTeams[3] || null;
 
-  const teamBravo = dbTeams.find((t: any) => t.name.toLowerCase().includes('bravo')) || {
-    name: 'TEAM BRAVO',
-    ownerName: 'Karan Mehta',
-    remainingBudget: 5000,
-    purchasedCount: 0,
-    squadCapacity: 7,
-    purchases: [],
-  };
-
-  const teamCharlie = dbTeams.find((t: any) => t.name.toLowerCase().includes('charlie')) || {
-    name: 'TEAM CHARLIE',
-    ownerName: 'Aditya Sen',
-    remainingBudget: 4200,
-    purchasedCount: 1,
-    squadCapacity: 7,
-    purchases: [{ id: '4', playerName: 'Priyansh V.' }],
-  };
-
-  const teamDelta = dbTeams.find((t: any) => t.name.toLowerCase().includes('delta')) || {
-    name: 'TEAM DELTA',
-    ownerName: 'Vivek Nair',
-    remainingBudget: 4800,
-    purchasedCount: 1,
-    squadCapacity: 7,
-    purchases: [{ id: '5', playerName: 'Daniel C.' }],
-  };
-
-  // Logged-in user's team or fallback to Team Alpha
+  // Logged-in user's team or fallback to first registered team
   const myTeam = useMemo(() => {
     if (session?.teamName) {
-      const match = dbTeams.find((t: any) => t.name.toLowerCase().includes(session.teamName.toLowerCase()));
+      const match = dbTeams.find((t: any) => t.name.toLowerCase() === session.teamName.toLowerCase());
       if (match) return match;
     }
-    return teamAlpha;
-  }, [session, dbTeams, teamAlpha]);
+    if (session?.teamId) {
+      const match = dbTeams.find((t: any) => t.id === session.teamId);
+      if (match) return match;
+    }
+    return teamSlot0;
+  }, [session, dbTeams, teamSlot0]);
 
-  // Fallback Recent Bids matching screenshot
-  const displayRecentBids = recentBids.length > 0 ? recentBids : [
-    { id: 'b1', amount: 1600, teamName: 'Team Alpha', timeLabel: '2 sec ago' },
-    { id: 'b2', amount: 1500, teamName: 'Team Delta', timeLabel: '8 sec ago' },
-    { id: 'b3', amount: 1400, teamName: 'Team Charlie', timeLabel: '14 sec ago' },
-    { id: 'b4', amount: 1300, teamName: 'Team Alpha', timeLabel: '19 sec ago' },
-  ];
+  // Display Recent Bids (dynamic from auction)
+  const displayRecentBids = recentBids;
 
-  // Fallback History matching screenshot
-  const displayHistory = history.length > 0 ? history : [
-    { id: 'h1', auctionNo: '06', playerName: 'Sujith P.', status: 'SOLD', photoUrl: null },
-    { id: 'h2', auctionNo: '07', playerName: 'Karthik R.', status: 'SOLD', photoUrl: null },
-    { id: 'h3', auctionNo: '05', playerName: 'Manav S.', status: 'SOLD', photoUrl: null },
-  ];
+  // Display History (dynamic from purchases)
+  const displayHistory = history;
 
   // Formatted countdown: 00:14
   const formattedTimer = `00:${String(countdownLeft).padStart(2, '0')}`;
@@ -351,18 +307,24 @@ function LiveAuctionBoard() {
           {/* LEFT SIDE: TOP-LEFT ALPHA & BOTTOM-LEFT CHARLIE (lg:col-span-3) */}
           {/* ========================================================= */}
           <div className="lg:col-span-3 flex flex-col justify-between gap-4">
-            {/* TOP LEFT: TEAM ALPHA */}
-            <div className="relative rounded-2xl p-4 card-alpha flex flex-col justify-between">
+            {/* TOP LEFT: SLOT 1 */}
+            <div className={`relative rounded-2xl p-4 flex flex-col justify-between ${teamSlot0 ? 'card-alpha' : 'border border-dashed border-sky-500/30 bg-[#07152B]/50'}`}>
               <div>
                 <div className="flex items-center gap-3">
-                  <TeamAlphaLion className="h-10 w-10 shrink-0" />
+                  <TeamSlotBadge
+                    slotNum={1}
+                    teamName={teamSlot0?.name}
+                    logoUrl={teamSlot0?.logoUrl}
+                    isJoined={Boolean(teamSlot0)}
+                    size="sm"
+                  />
                   <div className="flex flex-col text-left">
                     <h2 className="font-heading text-xl font-bold uppercase tracking-wider text-white">
-                      TEAM ALPHA
+                      {teamSlot0?.name || 'SLOT 1 OPEN'}
                     </h2>
                     <div className="flex items-center gap-1.5 text-xs text-slate-300 font-sans">
                       <Crown className="h-3.5 w-3.5 text-amber-400" />
-                      <span>Owner: {teamAlpha.ownerName}</span>
+                      <span>{teamSlot0 ? `Owner: ${teamSlot0.ownerName}` : 'Awaiting team owner'}</span>
                     </div>
                   </div>
                 </div>
@@ -371,21 +333,21 @@ function LiveAuctionBoard() {
                 <div className="mt-3 flex items-center justify-between text-xs">
                   <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-300 font-condensed text-sm font-bold">
                     <Wallet className="h-3.5 w-3.5" />
-                    <span>₹{teamAlpha.remainingBudget.toLocaleString('en-IN')} / 5,000</span>
+                    <span>₹{Number(teamSlot0?.remainingBudget ?? 5000).toLocaleString('en-IN')} / 5,000</span>
                   </div>
                   <div className="font-heading text-xs uppercase tracking-wider text-slate-300">
-                    Players: <span className="font-mono font-bold text-white">{teamAlpha.purchasedCount} / 7</span>
+                    Players: <span className="font-mono font-bold text-white">{teamSlot0?.purchasedCount ?? 0} / 7</span>
                   </div>
                 </div>
               </div>
 
-              {/* 7 Squad Slots (3 Filled, 4 Empty) */}
+              {/* 7 Squad Slots */}
               <div className="mt-4 grid grid-cols-7 gap-1.5">
                 {Array.from({ length: 7 }).map((_, idx) => {
-                  const isFilled = idx < teamAlpha.purchasedCount;
+                  const isFilled = idx < (teamSlot0?.purchasedCount ?? 0);
                   return (
                     <div
-                      key={`alpha-slot-${idx}`}
+                      key={`slot0-sub-${idx}`}
                       className={`h-9 rounded-lg border flex items-center justify-center overflow-hidden transition-all ${
                         isFilled
                           ? 'border-sky-400 bg-sky-950/80 shadow-[0_0_8px_rgba(0,140,255,0.4)]'
@@ -407,18 +369,24 @@ function LiveAuctionBoard() {
               </div>
             </div>
 
-            {/* BOTTOM LEFT: TEAM CHARLIE */}
-            <div className="relative rounded-2xl p-4 card-charlie flex flex-col justify-between">
+            {/* BOTTOM LEFT: SLOT 3 */}
+            <div className={`relative rounded-2xl p-4 flex flex-col justify-between ${teamSlot2 ? 'card-charlie' : 'border border-dashed border-emerald-500/30 bg-[#07152B]/50'}`}>
               <div>
                 <div className="flex items-center gap-3">
-                  <TeamCharlieWolf className="h-10 w-10 shrink-0" />
+                  <TeamSlotBadge
+                    slotNum={3}
+                    teamName={teamSlot2?.name}
+                    logoUrl={teamSlot2?.logoUrl}
+                    isJoined={Boolean(teamSlot2)}
+                    size="sm"
+                  />
                   <div className="flex flex-col text-left">
                     <h2 className="font-heading text-xl font-bold uppercase tracking-wider text-white">
-                      TEAM CHARLIE
+                      {teamSlot2?.name || 'SLOT 3 OPEN'}
                     </h2>
                     <div className="flex items-center gap-1.5 text-xs text-slate-300 font-sans">
                       <Crown className="h-3.5 w-3.5 text-amber-400" />
-                      <span>Owner: {teamCharlie.ownerName}</span>
+                      <span>{teamSlot2 ? `Owner: ${teamSlot2.ownerName}` : 'Awaiting team owner'}</span>
                     </div>
                   </div>
                 </div>
@@ -427,21 +395,21 @@ function LiveAuctionBoard() {
                 <div className="mt-3 flex items-center justify-between text-xs">
                   <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-300 font-condensed text-sm font-bold">
                     <Wallet className="h-3.5 w-3.5" />
-                    <span>₹{teamCharlie.remainingBudget.toLocaleString('en-IN')} / 5,000</span>
+                    <span>₹{Number(teamSlot2?.remainingBudget ?? 5000).toLocaleString('en-IN')} / 5,000</span>
                   </div>
                   <div className="font-heading text-xs uppercase tracking-wider text-slate-300">
-                    Players: <span className="font-mono font-bold text-white">{teamCharlie.purchasedCount} / 7</span>
+                    Players: <span className="font-mono font-bold text-white">{teamSlot2?.purchasedCount ?? 0} / 7</span>
                   </div>
                 </div>
               </div>
 
-              {/* 7 Squad Slots (1 Filled, 6 Empty) */}
+              {/* 7 Squad Slots */}
               <div className="mt-4 grid grid-cols-7 gap-1.5">
                 {Array.from({ length: 7 }).map((_, idx) => {
-                  const isFilled = idx < teamCharlie.purchasedCount;
+                  const isFilled = idx < (teamSlot2?.purchasedCount ?? 0);
                   return (
                     <div
-                      key={`charlie-slot-${idx}`}
+                      key={`slot2-sub-${idx}`}
                       className={`h-9 rounded-lg border flex items-center justify-center overflow-hidden transition-all ${
                         isFilled
                           ? 'border-emerald-400 bg-emerald-950/80 shadow-[0_0_8px_rgba(0,216,120,0.4)]'
@@ -495,15 +463,21 @@ function LiveAuctionBoard() {
                 {/* Gold Playing Position Badge */}
                 <div className="mt-2 inline-flex items-center gap-1.5 w-fit px-3 py-1 rounded-md bg-amber-400 text-slate-950 font-heading text-xs font-black uppercase tracking-wider shadow-[0_0_15px_rgba(251,191,36,0.5)]">
                   <span>🏃</span>
-                  <span>{(currentPlayer?.position || 'Opposite Hitter').replace('_', ' ')}</span>
+                  <span>
+                    {(() => {
+                      const u = String(currentPlayer?.position || '').trim().toUpperCase();
+                      if (u === 'OUTSIDE_HITTER' || u === 'ATTACKER') return 'Attacker';
+                      if (u === 'LIBERO') return 'Libero';
+                      if (u === 'DEFENSIVE_SPECIALIST' || u === 'DEFENCE') return 'Defence';
+                      if (u === 'SETTER') return 'Setter';
+                      if (u === 'MIDDLE_BLOCKER' || u === 'OPPOSITE' || u === 'ALL_ROUNDER') return 'All Rounder';
+                      return (currentPlayer?.position || 'Attacker').replace('_', ' ');
+                    })()}
+                  </span>
                 </div>
 
                 {/* Stats List */}
                 <div className="mt-5 space-y-2 text-xs sm:text-sm">
-                  <div className="flex justify-between border-b border-white/5 pb-1">
-                    <span className="text-slate-400 font-sans">Age</span>
-                    <span className="font-heading font-bold text-white">{currentPlayer?.age || 22}</span>
-                  </div>
                   <div className="flex justify-between border-b border-white/5 pb-1">
                     <span className="text-slate-400 font-sans">Height</span>
                     <span className="font-heading font-bold text-white">{currentPlayer?.height || 194} cm</span>
@@ -572,9 +546,14 @@ function LiveAuctionBoard() {
                   </span>
                   <div className="mt-1 flex items-center gap-2">
                     <span className="font-heading text-sm font-bold text-white uppercase tracking-wider">
-                      {auction?.highestBidTeam?.name || 'TEAM ALPHA'}
+                      {auction?.highestBidTeam?.name || 'NO BIDS YET'}
                     </span>
-                    <TeamAlphaLion className="h-6 w-6" />
+                    {auction?.highestBidTeam?.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={auction.highestBidTeam.logoUrl} alt="Bidder" className="h-6 w-6 rounded-full object-cover" />
+                    ) : (
+                      <Gavel className="h-4 w-4 text-amber-400" />
+                    )}
                   </div>
                 </div>
 
@@ -665,18 +644,24 @@ function LiveAuctionBoard() {
           {/* RIGHT SIDE: TOP-RIGHT BRAVO & BOTTOM-RIGHT DELTA (lg:col-span-3) */}
           {/* ========================================================= */}
           <div className="lg:col-span-3 flex flex-col justify-between gap-4">
-            {/* TOP RIGHT: TEAM BRAVO */}
-            <div className="relative rounded-2xl p-4 card-bravo flex flex-col justify-between">
+            {/* TOP RIGHT: SLOT 2 */}
+            <div className={`relative rounded-2xl p-4 flex flex-col justify-between ${teamSlot1 ? 'card-bravo' : 'border border-dashed border-red-500/30 bg-[#07152B]/50'}`}>
               <div>
                 <div className="flex items-center gap-3">
-                  <TeamBravoBull className="h-10 w-10 shrink-0" />
+                  <TeamSlotBadge
+                    slotNum={2}
+                    teamName={teamSlot1?.name}
+                    logoUrl={teamSlot1?.logoUrl}
+                    isJoined={Boolean(teamSlot1)}
+                    size="sm"
+                  />
                   <div className="flex flex-col text-left">
                     <h2 className="font-heading text-xl font-bold uppercase tracking-wider text-white">
-                      TEAM BRAVO
+                      {teamSlot1?.name || 'SLOT 2 OPEN'}
                     </h2>
                     <div className="flex items-center gap-1.5 text-xs text-slate-300 font-sans">
                       <Crown className="h-3.5 w-3.5 text-amber-400" />
-                      <span>Owner: {teamBravo.ownerName}</span>
+                      <span>{teamSlot1 ? `Owner: ${teamSlot1.ownerName}` : 'Awaiting team owner'}</span>
                     </div>
                   </div>
                 </div>
@@ -685,39 +670,60 @@ function LiveAuctionBoard() {
                 <div className="mt-3 flex items-center justify-between text-xs">
                   <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-300 font-condensed text-sm font-bold">
                     <Wallet className="h-3.5 w-3.5" />
-                    <span>₹{teamBravo.remainingBudget.toLocaleString('en-IN')} / 5,000</span>
+                    <span>₹{Number(teamSlot1?.remainingBudget ?? 5000).toLocaleString('en-IN')} / 5,000</span>
                   </div>
                   <div className="font-heading text-xs uppercase tracking-wider text-slate-300">
-                    Players: <span className="font-mono font-bold text-white">{teamBravo.purchasedCount} / 7</span>
+                    Players: <span className="font-mono font-bold text-white">{teamSlot1?.purchasedCount ?? 0} / 7</span>
                   </div>
                 </div>
               </div>
 
-              {/* 7 Squad Slots (0 Filled, 7 Empty) */}
+              {/* 7 Squad Slots */}
               <div className="mt-4 grid grid-cols-7 gap-1.5">
-                {Array.from({ length: 7 }).map((_, idx) => (
-                  <div
-                    key={`bravo-slot-${idx}`}
-                    className="h-9 rounded-lg border border-red-500/20 bg-slate-950/40 border-dashed flex items-center justify-center text-[10px] text-red-500/30"
-                  >
-                    #
-                  </div>
-                ))}
+                {Array.from({ length: 7 }).map((_, idx) => {
+                  const isFilled = idx < (teamSlot1?.purchasedCount ?? 0);
+                  return (
+                    <div
+                      key={`slot1-sub-${idx}`}
+                      className={`h-9 rounded-lg border flex items-center justify-center overflow-hidden transition-all ${
+                        isFilled
+                          ? 'border-red-400 bg-red-950/80 shadow-[0_0_8px_rgba(255,35,69,0.4)]'
+                          : 'border-red-500/20 bg-slate-950/40 border-dashed'
+                      }`}
+                    >
+                      {isFilled ? (
+                        <PlayerPortrait
+                          name={`Player ${idx + 1}`}
+                          size="sm"
+                          className="h-7 w-7"
+                        />
+                      ) : (
+                        <span className="text-[10px] text-red-500/30">#</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* BOTTOM RIGHT: TEAM DELTA */}
-            <div className="relative rounded-2xl p-4 card-delta flex flex-col justify-between">
+            {/* BOTTOM RIGHT: SLOT 4 */}
+            <div className={`relative rounded-2xl p-4 flex flex-col justify-between ${teamSlot3 ? 'card-delta' : 'border border-dashed border-purple-500/30 bg-[#07152B]/50'}`}>
               <div>
                 <div className="flex items-center gap-3">
-                  <TeamDeltaHorse className="h-10 w-10 shrink-0" />
+                  <TeamSlotBadge
+                    slotNum={4}
+                    teamName={teamSlot3?.name}
+                    logoUrl={teamSlot3?.logoUrl}
+                    isJoined={Boolean(teamSlot3)}
+                    size="sm"
+                  />
                   <div className="flex flex-col text-left">
                     <h2 className="font-heading text-xl font-bold uppercase tracking-wider text-white">
-                      TEAM DELTA
+                      {teamSlot3?.name || 'SLOT 4 OPEN'}
                     </h2>
                     <div className="flex items-center gap-1.5 text-xs text-slate-300 font-sans">
                       <Crown className="h-3.5 w-3.5 text-amber-400" />
-                      <span>Owner: {teamDelta.ownerName}</span>
+                      <span>{teamSlot3 ? `Owner: ${teamSlot3.ownerName}` : 'Awaiting team owner'}</span>
                     </div>
                   </div>
                 </div>
@@ -726,21 +732,21 @@ function LiveAuctionBoard() {
                 <div className="mt-3 flex items-center justify-between text-xs">
                   <div className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-300 font-condensed text-sm font-bold">
                     <Wallet className="h-3.5 w-3.5" />
-                    <span>₹{teamDelta.remainingBudget.toLocaleString('en-IN')} / 5,000</span>
+                    <span>₹{Number(teamSlot3?.remainingBudget ?? 5000).toLocaleString('en-IN')} / 5,000</span>
                   </div>
                   <div className="font-heading text-xs uppercase tracking-wider text-slate-300">
-                    Players: <span className="font-mono font-bold text-white">{teamDelta.purchasedCount} / 7</span>
+                    Players: <span className="font-mono font-bold text-white">{teamSlot3?.purchasedCount ?? 0} / 7</span>
                   </div>
                 </div>
               </div>
 
-              {/* 7 Squad Slots (1 Filled, 6 Empty) */}
+              {/* 7 Squad Slots */}
               <div className="mt-4 grid grid-cols-7 gap-1.5">
                 {Array.from({ length: 7 }).map((_, idx) => {
-                  const isFilled = idx < teamDelta.purchasedCount;
+                  const isFilled = idx < (teamSlot3?.purchasedCount ?? 0);
                   return (
                     <div
-                      key={`delta-slot-${idx}`}
+                      key={`slot3-sub-${idx}`}
                       className={`h-9 rounded-lg border flex items-center justify-center overflow-hidden transition-all ${
                         isFilled
                           ? 'border-purple-400 bg-purple-950/80 shadow-[0_0_8px_rgba(168,85,247,0.4)]'
@@ -841,31 +847,44 @@ function LiveAuctionBoard() {
                 <span>MY TEAM SQUAD ({myTeam?.name || 'TEAM ALPHA'})</span>
               </div>
               <span className="font-mono text-xs font-bold text-white">
-                {myTeam?.purchasedCount || 3} / {myTeam?.squadCapacity || 7}
+                {myTeam?.purchasedCount ?? 0} / {myTeam?.squadCapacity || 7}
               </span>
             </div>
 
             {/* 7 Squad Slots for Logged-in Team */}
             <div className="mt-2.5 grid grid-cols-7 gap-1.5">
               {Array.from({ length: 7 }).map((_, idx) => {
-                const isPurchased = idx < (myTeam?.purchasedCount || 3);
+                const purchasedList = myTeam?.purchases || [];
+                const purchase = purchasedList[idx];
+                const isPurchased = Boolean(purchase);
                 return (
                   <div
                     key={`my-squad-slot-${idx}`}
-                    className={`h-11 rounded-xl border flex items-center justify-center overflow-hidden transition-all ${
+                    title={purchase ? `${purchase.playerName} (${purchase.isIcon ? 'Icon Player' : `₹${purchase.price}`})` : `Open Slot ${idx + 1}`}
+                    className={`h-11 rounded-xl border flex items-center justify-center overflow-hidden transition-all relative ${
                       isPurchased
-                        ? 'border-sky-400 bg-sky-950/80 shadow-[0_0_10px_rgba(0,140,255,0.35)]'
+                        ? purchase.isIcon
+                          ? 'border-amber-400 bg-amber-950/60 shadow-[0_0_10px_rgba(251,191,36,0.35)]'
+                          : 'border-sky-400 bg-sky-950/80 shadow-[0_0_10px_rgba(0,140,255,0.35)]'
                         : 'border-white/10 bg-slate-950/50 border-dashed'
                     }`}
                   >
                     {isPurchased ? (
-                      <PlayerPortrait
-                        name={`Acquired Player ${idx + 1}`}
-                        size="sm"
-                        className="h-8 w-8"
-                      />
+                      <>
+                        <PlayerPortrait
+                          name={purchase?.playerName || `Player ${idx + 1}`}
+                          photoUrl={purchase?.playerPhoto}
+                          size="sm"
+                          className="h-8 w-8"
+                        />
+                        {purchase.isIcon && (
+                          <div className="absolute top-0.5 right-0.5 text-[8px] text-amber-300 font-black">
+                            ★
+                          </div>
+                        )}
+                      </>
                     ) : (
-                      <span className="text-[10px] text-slate-500">#</span>
+                      <span className="text-[10px] text-slate-500">#{idx + 1}</span>
                     )}
                   </div>
                 );
